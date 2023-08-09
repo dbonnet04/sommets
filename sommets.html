@@ -1,0 +1,421 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset='utf-8' />
+<title>Sommets majeurs de la destination </title>
+
+<link rel="stylesheet" href="reseaucss.css"> <!-- J'appelle mon fichier CSS dans le même dossier -->
+
+
+
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css' rel='stylesheet' />
+
+</head>
+<body>
+<header>
+		<a href='https://www.verdontourisme.com/preparer-mon-sejour/decouvrir-le-verdon/decouvrir-la-destination/les-gorges-du-verdon/toutes-les-randonnees/'><img src='test2.png' alt='logo IUT'>
+		</a>
+</header>
+	
+	
+		
+	<h1>Sommets majeurs de la destination</h1>
+	
+	
+	<main>
+	<section>
+
+
+<!-- J'initialise le plugin Geocoder-->
+
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+
+<div id='map' class='map'></div>
+
+<div class='map-overlay-2 top'>
+    <div class='map-overlay-inner'>
+        <fieldset>
+            <label class="categoryLabel">Topographie</label>
+				<div>
+                <input type="checkbox" id="sommetsCB" value="sommets" onchange="switchlayer('sommets')"/> <!-- Supprimer checked de l'input pour ne pas être coché dès le début -->
+                <label for="sommetsCB">Sommets</label>
+				</div>
+            
+        </fieldset>
+		
+    </div>
+</div>
+
+
+<script>
+// AccesToken
+mapboxgl.accessToken = 
+'pk.eyJ1IjoiZGFibzIyIiwiYSI6ImNremltNXR2aTMxaG0ydW8xYmcwOGU3YjUifQ.33TjJKovMQpZ1dkC0S9K3Q';
+
+// Configuration de la carte
+
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/satellite-streets-v12', <!-- Le modèle DEM fonctionne uniquement avec le style satellite streets-v12 -->
+center: [6.508406, 43.967269],// En degré décimal depuis Géoportail
+zoom: 9.5, // zoom
+pitch: 40, // Inclinaison
+bearing: 40 // Rotation
+});
+
+
+		// AJout de donnees OSM
+
+      // Configuration de la source Topographie
+	map.on('style.load', () => {
+			map.addSource('mapbox-dem', { // Définition de la source de donnée
+				'type': 'raster-dem',
+				'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',  // On ajoute le MNT à notre carte
+				'tileSize': 512,
+				'maxzoom': 14
+			});
+        // add the DEM source as a terrain layer with exaggerated height
+        map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 }); // On ajoute une exagération de 1.5 pour la rendre réaliste
+    
+
+	//J'ajoute mes données importées dans le Tileset Mapbox
+	
+		<!-- ATTENTION AVEC MAPBOX LES COUCHES DOIVENT ÊTRE EN WEB MERCATOR, EPSG 3857 -->
+	
+			// Ajout des sommets
+			
+		
+			map.addSource('sommets', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.1yd7hvvn'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			
+			
+			
+
+			  map.loadImage('https://i.imgur.com/3eFxZ6z.png', function (error, green) { <!-- Je charge depuis mes images téléversées sur Imgur l'image normalisée de la prise d'eau -->
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("image", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'sommets',
+                'type': 'symbol',
+                'source': 'sommets',
+				"filter": ["all"], <!-- Je ne filtre pas -->
+                'source-layer': 'mercator-drgx1a',  <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "image",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+			});
+
+	
+			// Ajout des canalisations
+			
+			map.addSource('canalisations', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.1044tc81'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			map.addLayer({
+			'id': 'canalisations', <!-- Donner le nom que l'on souhaite -->
+			'type': 'line',
+			'source': 'canalisations', <!-- Donner le nom que l'on souhaite -->
+			'source-layer':'shp-30ren7',
+			'layout': {'visibility': 'none', 'line-join': 'round','line-cap': 'round'},
+			'paint': {'line-width': 2, 'line-color': 'blue',} <!--bien mettre line-width et line-color quand le type est line, la couleur est à bleue  -->
+			});
+			
+			
+			// Ajout des réservoirs
+		
+			map.addSource('reservoirs', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.akgp2rht'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			map.loadImage("https://i.imgur.com/yEtGmUk.png", function (error, green) {
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("reservoirs", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'reservoirs',
+                'type': 'symbol',
+                'source': 'reservoirs',
+				"filter": ["all"], <!-- C'est génial, je peux filtrer selon le champ type_ouv: Ventouse, Prise d'eau, Borne d'irrigation, Autre: Anti-coup de Bélier -->
+                'source-layer': 'reservoirs-cigcua',  <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "reservoirs",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+				});
+		
+		
+	
+			
+		
+				
+			// Ajout des anti - coup de bélier
+			
+			
+				map.addSource('béliers', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.6rqpydq6'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			  map.loadImage("https://img.icons8.com/external-those-icons-lineal-color-those-icons/24/external-Aries-zodiac-those-icons-lineal-color-those-icons-2.png", function (error, green) {
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("béliers", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'béliers',
+                'type': 'symbol',
+                'source': 'béliers',
+				"filter": ["all",["==", "ref_ouv", "Anti coup de bélier"]], <!-- C'est génial, je peux filtrer selon le champ type_ouv: Ventouse, Prise d'eau, Borne d'irrigation, Autre: Anti-coup de Bélier -->
+                'source-layer': 'bornes-8w8r5e',  <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "béliers",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+				});
+			
+			
+			// Ajout des vannes
+		
+			map.addSource('vannes', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.6e94v67d'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			  map.loadImage("https://i.imgur.com/Dtc4xhp.png", function (error, green) {
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("vannes", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'vannes',
+                'type': 'symbol',
+                'source': 'vannes',
+				"filter": ["all"], <!-- C'est génial, je peux filtrer selon le champ type_ouv: Ventouse, Prise d'eau, Borne d'irrigation, Autre: Anti-coup de Bélier -->
+				'source-layer':'vannes-33vr0y',   <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "vannes",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+				});
+				
+				
+			// Ajout des bornes
+			
+			
+				map.addSource('bornes', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.6rqpydq6'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			  map.loadImage("https://i.imgur.com/WYvVcMS.png", function (error, green) {
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("arrosage", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'bornes',
+                'type': 'symbol',
+                'source': 'bornes',
+				"filter": ["all",["==", "type_ouv", "Borne d'irrigation"]], <!-- C'est génial, je peux filtrer selon le champ type_ouv: Ventouse, Prise d'eau, Borne d'irrigation, Autre: Anti-coup de Bélier -->
+                'source-layer': 'bornes-8w8r5e',  <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "arrosage",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+				});
+				
+			// Ajout des ventouses
+			
+			
+				map.addSource('ventouses', { <!-- Ne pas mettre d'underscore dans l'appelation du nom de la source, ça ne marchait pas avec waypoints_co_brusquet j'ai alors supprimé les underscores pour garder uniquement waypoints-->
+			type: 'vector',
+			url: 'mapbox://dabo22.6rqpydq6'}); <!-- Bien ajouter l'id du tileset de Mapbox -->
+			
+			  map.loadImage("https://i.imgur.com/eJ8TySQ.png", function (error, green) {
+			//this is where we load the image file
+            if (error) throw error;
+            map.addImage("ventouses", green); //this is where we name the image file we are loading
+            map.addLayer({
+                'id': 'ventouses',
+                'type': 'symbol',
+                'source': 'ventouses',
+				"filter": ["all",["==", "type_ouv", "Ventouse"]], <!-- C'est génial, je peux filtrer selon le champ type_ouv: Ventouse, Prise d'eau, Borne d'irrigation, Autre: Anti-coup de Bélier -->
+                'source-layer': 'bornes-8w8r5e',  <!-- ATTENTION de bien ajouter la source layer provenant de Mapbox -->
+                'layout': {
+                    'icon-image': "ventouses",
+                    'icon-size': 1.0,
+                    'icon-allow-overlap': true,
+					'visibility': 'none' <!-- Je n'affiche pas d'emblée la visibilité de la couche -->
+                }
+				});
+				});
+	
+	
+	    // Ajout des données OSM
+	
+			
+			map.addSource('mapbox-streets-v8', { <!-- J'ajoute la source pour affciher dessous les couches des données OSM -->
+			type: 'vector',
+			url: 'mapbox://mapbox.mapbox-streets-v8'});
+		
+		// Configuration de la couche de l'hydrographie
+
+			map.addLayer({"id": "hydrologie", <!-- appel de couche car la source est la même que pour les routes (mapbox-streets-v8) -->
+			"type": "line",
+			"source": "mapbox-streets-v8",
+			"source-layer": "waterway",
+			'layout': {'visibility': 'none'},
+			"paint": {"line-color": "#4dd2ff",
+			"line-width": 5}
+			});
+			
+			
+			// Ajout batiments 3D OSM
+		
+			map.addLayer({
+			'id': 'Batiments_3D',
+			'source': 'mapbox-streets-v8', <!-- Bien ajouter mapbox-streets-v8 comme source, elle correspond à OSM dans Mapbox  -->
+			'source-layer': 'building',
+			'layout': {'visibility': 'none'},
+			'filter': ['==', 'extrude', 'true'],
+			'type': 'fill-extrusion', // On extrude les batiments 
+			'minzoom': 15,
+			'paint': {'fill-extrusion-color': '#555555', 'fill-extrusion-height': 
+			{'type': 'identity','property': 'height'},
+			'fill-extrusion-base': {'type': 'identity','property': 'min_height'},
+			'fill-extrusion-opacity': 0.8
+			}
+			});	
+			
+		
+			 
+		// Ajout des bâtiments 
+		
+			map.addLayer({
+			"id": "batiments",
+			"type": "fill", 
+			"source": "mapbox-streets-v8",
+			"source-layer": "building",
+			'layout': {'visibility': 'none'},
+			"paint": {"fill-color": "#FEFEFE",
+			"fill-opacity": 0.8}
+			});
+
+
+		// Configuration de la couche route
+
+			map.addLayer({ <!-- On appel ici la couche de données des routes issues d’OSM -->
+
+			"id": "Routes",
+			"type": "line",
+			"source": "mapbox-streets-v8",
+			"layout": {'visibility': 'none'},
+			"source-layer": "road",
+			'layout': {'visibility': 'none'},
+			"filter": ["all",  ["in", "track", "street"]],   <!-- On peut filtrer uniquement avec l'attribut "filter" les pistes forestières "track" et les petites voies "street", regarder toutes les options dans la doc Mapbox https://docs.mapbox.com/data/tilesets/reference/mapbox-streets-v8/#road-->
+			"paint": {"line-color": "#FF7F50", "line-width": 1} // On définit la couleur des route à orange selon le code hexadécimal #FF7F50
+			});
+			
+	     switchlayer = function (lname) {
+            if (document.getElementById(lname + "CB").checked) {
+                map.setLayoutProperty(lname, 'visibility', 'visible');
+            } else {
+                map.setLayoutProperty(lname, 'visibility', 'none');
+           }
+        }
+
+				
+		
+				
+			
+	
+							
+			}); <!--}) En lien avec le map.on de la configuration de la source, ATTENTION il doit contenir tous les map.addLayer-->
+			
+			
+			const geocoder = new MapboxGeocoder({
+			accessToken: mapboxgl.accessToken,
+			language: 'fr-FR', // Specify the language as German.
+			mapboxgl: mapboxgl
+			});
+			map.addControl(geocoder, 'bottom-right');	
+				
+		
+			// Ajout boutons navigation a la fin du script
+			var nav = new mapboxgl.NavigationControl();
+			map.addControl(nav, 'top-left');
+						
+						
+			// Ajout Echelle cartographique a la fin du script
+			map.addControl(new mapboxgl.ScaleControl({
+			maxWidth: 120,
+			unit: 'metric'}));
+			
+			
+			//Intéractivité lors du clic
+			
+			map.on('click', function (e) { <!-- Evenement au clic sur la couche vannes  -->
+			var features = map.queryRenderedFeatures(e.point, { layers: ['sommets'] });
+			if (!features.length) {
+			return;
+			}
+			var feature = features[0];
+			var popup = new mapboxgl.Popup({ offset: [0, -15] })
+			.setLngLat(feature.geometry.coordinates)
+			.setHTML( 'Sommet : '  + '<h3>' + feature.properties.Nom + '</h3>' + 
+               'Altitude : ' + '<h3>' +   feature.properties.Z + ' m' + '</h3>' ) <!-- Je lui fait afficher le champ type_vanne -->
+			.addTo(map);
+			});
+			map.on('mousemove', function (e) {
+			var features = map.queryRenderedFeatures(e.point, { layers: ['vannes'] });
+			map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+			});
+			
+			//Interactivité au survol
+			var popup = new mapboxgl.Popup({
+			closeButton: false,
+			closeOnClick: false });
+			map.on('mousemove', function(e) { <!-- Evenement au survol -->
+			var features = map.queryRenderedFeatures(e.point, { layers: ['bornes'] }); <!-- Je passe plusieurs couches dans le même événement hover au survol -->
+			// Change the cursor style as a UI indicator.
+			map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+			if (!features.length) {
+			popup.remove();
+			return; }
+			var feature = features[0];
+			var imageHTML = '<img id="popup-image" src="' + feature.properties.photo_1 + '">'; <!-- Je lui fait afficher le champ type_ouv et la photo des bornes du champ "photo_1"-->
+			var popupContent = '<h3>' + feature.properties.type_ouv + '</h3>' + imageHTML;
+			popup.setLngLat(feature.geometry.coordinates)
+			.setHTML(popupContent) 
+			.addTo(map);
+			});
+			
+		
+</script>
+
+</section>
+	</main>
+	
+	
+
+	<footer>
+		<a href="mailto:david.bonnet@verdontourisme.com">David BONNET</a>
+	</footer>
+</body>
+</html>
